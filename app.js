@@ -20,10 +20,9 @@ app.use((req, res, next) => {
     next();
 })
 
-app.use('/api/stuff', stuffRoutes)
-
 app.use(bodyParser.json())
 
+app.use('/api/stuff', stuffRoutes)
 
 
 
