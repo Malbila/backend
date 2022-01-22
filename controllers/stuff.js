@@ -1,14 +1,14 @@
 const Thing = require('../models/thing')
+const fs = require('fs')
 
 // **************************************CREATE THING****************************************************
 
 exports.createThing = (req, res, next) => {
+    const thingObject = JSON.parse(req.body.thing)
+    delete thingObject._id
     const thing = new Thing({
-        title: req.body.title,
-        description: req.body.description,
-        imageUrl: req.body.imageUrl,
-        price: req.body.price,
-        userId: req.body.userId
+        ...thingObject,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     })
     thing.save().then(
         () => {
@@ -46,15 +46,15 @@ exports.getOneThing = (req, res, next) => {
 // *****************************************MODIFY THING********************************************************
 
 exports.modifyThing = (req, res, next) => {
-    const thing = new Thing({
-        _id: req.params.id,
-        title: req.body.title,
-        description: req.body.description,
-        imageUrl: req.body.imageUrl,
-        userId: req.body.userId,
-        price: req.body.price
-    })
-  Thing.updateOne({ _id: req.params.id }, thing).then(
+    const thingObject = req.file ?
+    {
+        ...JSON.parse(req.body.thing),
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    } :
+    {
+        ...req.body
+    }
+  Thing.updateOne({ _id: req.params.id }, { ...thingObject, _id: req.params.id }).then(
         () => {
             res.status(200).json({
                message: 'Thing updated successfully !'
@@ -72,33 +72,26 @@ exports.modifyThing = (req, res, next) => {
 // *****************************************DELETE THING***************************************************************
 
 exports.deleteThing = (req, res, next) => {
-    Thing.findOne({ _id: req.params.id }).then(
-        (thing) => {
-            if(!thing) {
-                res.status(404).json({
-                    error: new Error('No such thing !')
-                })
-            }
-            if(thing.userId !== req.auth.userId) {
-                res.status(400).json({
-                    error: new Error('Unauthorized request !')
-                })
-            }
-            Thing.deleteOne({ _id: req.params.id }).then(
-                () => {
-                    res.status(200).json({
-                        message: 'Deleted'
-                    })
-                }
-            ).catch(
-                (error) => {
-                    res.status(400).json({
-                        error: error
-                    })
-                }
-            ) 
-        }
-    )
+    Thing.findOne({ _id: req.params.id })
+        .then(thing => {
+            const filename = thing.imageUrl.split('/images/')[1]
+            fs.unlink(`images/${filename}`, () => {
+                Thing.deleteOne({ _id: req.params.id }).then(
+                    () => {
+                        res.status(200).json({
+                            message: 'Deleted'
+                        })
+                    }
+                ).catch(
+                    (error) => {
+                        res.status(400).json({
+                            error: error
+                        })
+                    }
+                ) 
+            })
+        })
+        .catch(error => res.status(500).json({ error }))
 }
 
 // ****************************************GET THINGS******************************************************
