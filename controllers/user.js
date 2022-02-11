@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt')
 
 const User = require('../models/user')
 
-// ******************************************USER SIGNUP******************************************************
+// ******************************************USER SIGNUP********************************************************
 
 exports.signup = (req, res, next) => {
     bcrypt.hash(req.body.password, 10)
@@ -15,7 +15,9 @@ exports.signup = (req, res, next) => {
             })
             user.save()
                 .then(() => res.status(201).json({ message: 'User created'}))
-                .catch(error => res.status(400).json({ error }))
+                .catch(error => {
+                    res.status(400).json({ error })
+                })
         })
         .catch(error => res.status(500).json({ error }))
 
@@ -43,7 +45,7 @@ exports.login = (req, res, next) => {
                       )
                 })
             })
-            .catch(() => res.status(500).json({ error }))
+            .catch((error) => res.status(500).json({ error }))
         })
-        .catch(() => res.status(500).json({ error }))
+        .catch((error) => res.status(500).json({ error }))
 }
