@@ -11,7 +11,7 @@ const cors = require('cors')
 const app = express()
 
 
-mongoose.connect('mongodb+srv://Malbila:2CxsC4aWr7jGgwB@cluster0.adelz.mongodb.net/Cluster0?retryWrites=true&w=majority',
+mongoose.connect('mongodb+srv://@cluster0.adelz.mongodb.net/Cluster0?retryWrites=true&w=majority',
   { useNewUrlParser: true,
     useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
